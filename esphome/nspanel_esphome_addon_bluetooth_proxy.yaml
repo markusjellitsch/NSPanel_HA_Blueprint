@@ -104,6 +104,10 @@ binary_sensor:
         return id(room_presence).state;
       }
 
+
+packages:
+  ble_base_package: !include nspanel_esphome_addon_ble_tracker.yaml
+
 script:
   # Publish event every 30 seconds when no rssi received
   id: presence_timeout
@@ -113,11 +117,7 @@ script:
     - lambda: |-
         id(room_presence_debounce).publish_state(0);
     - script.execute: presence_timeout
-
-packages:
-  ble_base_package: !include nspanel_esphome_addon_ble_tracker.yaml
-
-script:
+    
   - id: !extend dump_config
     then:
       - lambda: |-
