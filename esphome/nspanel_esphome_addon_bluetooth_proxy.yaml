@@ -12,8 +12,11 @@ esphome:
   platformio_options:
     build_flags:
       - -D NSPANEL_HA_BLUEPRINT_ADDON_BLUETOOTH_PROXY
+asdfasdfasdf
 
-bluetooth_proxy:
+
+a
+asdfasdfbluetooth_proxy:
   id: ble_proxy
 
 
