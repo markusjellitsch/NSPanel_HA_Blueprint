@@ -1,112 +1,32 @@
-#####################################################################################################
-##### NSPANEL ESPHOME created by Blackymas - https://github.com/Blackymas/NSPanel_HA_Blueprint  #####
-##### ESPHome Add-on for Bluetooth proxy                                                        #####
-##### PLEASE only make changes if it is necessary and also the required knowledge is available. #####
-##### For normal use with the Blueprint, no changes are necessary.                              #####
-#####################################################################################################
-##### ATTENTION: This will add climate elements to the core system and requires the core part.  #####
-#####################################################################################################
----
-  
 esphome:
   platformio_options:
     build_flags:
       - -D NSPANEL_HA_BLUEPRINT_ADDON_BLUETOOTH_PROXY
-      
-esp32_ble_tracker:
-  scan_parameters:
-    interval: 1.2s
-    window: 500ms
-    active: false
-  on_ble_advertise:
-    - then:
-      # Look for manufacturer data of form: 4c00 10 05 YY 98 XXXXXX
-      # Where YY can be 01..0F or 20..2F; and XXXXXX is ignored
-      - lambda: |-
-          optional<int16_t> best_rssi = nullopt;
-          for (auto data : x.get_manufacturer_datas()) {
-            // Guard against non-Apple datagrams, or those that are too small.
-            if (data.data.size() < 4 || data.uuid.to_string() != "0x004C" || data.data[0] != 0x10 || data.data[1] < 5) {
-              continue;
-            }
-            const int16_t rssi = x.get_rssi();
-            const uint8_t status_flags = data.data[2] >> 4;  // High nibble
-            const uint8_t data_flags = data.data[3];
-            
-            if (data_flags == 0x98) {  // Match unlocked Apple Watch. To also match locked watch use: if (data_flags == 0x98 || data_flags == 0x18) {
-              if (status_flags == 0 || status_flags == 2) {
-                best_rssi = max(rssi, best_rssi.value_or(rssi));
-                ESP_LOGD("ble_adv", "Found Apple Watch (mac %s) rssi %i", x.address_str().c_str(), rssi);
-              } else {
-                ESP_LOGD("ble_adv", "Possible Apple Watch? (mac %s) rssi %i, unrecognised status/action flags %#04x", x.address_str().c_str(), rssi, data.data[2]);
-              }
-            }
-          }
-          if (best_rssi) {
-            id(apple_watch_rssi).publish_state(*best_rssi);
-          }
 
-sensor:
-  - platform: template
-    id: apple_watch_rssi
-    name: "$yourname Apple Watch $roomname RSSI"
-    device_class: signal_strength
-    unit_of_measurement: dBm
-    accuracy_decimals: 0
-    filters:
-      - exponential_moving_average:
-          alpha: 0.3
-          send_every: 1
-    on_value:
-      then:
-        - lambda: |-
-            if (id(apple_watch_rssi).state > $rssi_present) {
-              id(room_presence_debounce).publish_state(1);
-            } else if (id(apple_watch_rssi).state < $rssi_not_present) {
-              id(room_presence_debounce).publish_state(0);
-            }
-        - script.execute: presence_timeout  # Publish 0 if no rssi received
-  
-  - platform: template
-    id: room_presence_debounce
-    filters:
-      - sliding_window_moving_average:
-          window_size: 3
-          send_every: 1
-          
-  - platform: homeassistant
-    name: HA RSSI Present Value
-    entity_id: input_number.rssi_present
-    id: harssi_present
-    internal: true
-  - platform: homeassistant
-    name: HA RSSI Not Present Value
-    entity_id: input_number.rssi_not_present
-    id: harssi_not_present
-    internal: true
+bluetooth_proxy:
+  id: ble_proxy
 
-    
-binary_sensor:
-  - platform: template
-    id: room_presence
-    name: "$yourname $roomname presence"
-    device_class: occupancy
-    lambda: |-
-      if (id(room_presence_debounce).state > 0.99) {
-        return true;
-      } else if (id(room_presence_debounce).state < 0.01) {
-        return false;
-      } else {
-        return id(room_presence).state;
-      }
+packages:
+  ble_base_package: !include nspanel_esphome_addon_ble_tracker.yaml
 
 script:
-  # Publish event every 30 seconds when no rssi received
-  id: presence_timeout
-  mode: restart
-  then:
-    - delay: 30s
-    - lambda: |-
-        id(room_presence_debounce).publish_state(0);
-    - script.execute: presence_timeout
+  - id: !extend dump_config
+    then:
+      - lambda: |-
+          // Check if this is installed with Arduino
+          #ifdef USE_ARDUINO
+            #error "Invalid settings for add-on Bluetooth Proxy. Arduino framework is not supported when using Bluetooth in this project."
+          #endif
+          if (!id(is_uploading_tft)) {
+            static const char *const TAG = "nspanel_ha_blueprint";
+            ESP_LOGCONFIG(TAG, "Add-on Bluetooth Proxy:");
+            ESP_LOGCONFIG(TAG, "  Mode:        %s", ble_proxy->has_active() ? "Active" : "Passive");
+            ESP_LOGCONFIG(TAG, "  Connections: %i", int(ble_proxy->get_bluetooth_connections_limit() -
+                                                        ble_proxy->get_bluetooth_connections_free()));
+            ESP_LOGCONFIG(TAG, "  Limit:       %i", int(ble_proxy->get_bluetooth_connections_limit()));
+          }
 
+# Set Wi-Fi power save mode to "LIGHT" as required for Bluetooth on ESP32
+wifi:
+  power_save_mode: LIGHT
+...
