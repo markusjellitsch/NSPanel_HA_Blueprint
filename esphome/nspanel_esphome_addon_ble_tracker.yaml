@@ -72,7 +72,7 @@ sensor:
             } else if (id(apple_watch_rssi).state < $rssi_not_present) {
               id(room_presence_debounce).publish_state(0);
             }
-        - script.execute: presence_timeout  # Publish 0 if no rssi received
+        #- script.execute: presence_timeout  # Publish 0 if no rssi received
   
   - platform: template
     id: room_presence_debounce
