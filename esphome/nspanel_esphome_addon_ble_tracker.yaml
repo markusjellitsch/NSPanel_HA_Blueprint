@@ -98,6 +98,7 @@ script:
     then:
       - lambda: |-
         ESP_LOGCONFIG(TAG, "Add-on BLE Tracker");
+      - script.execute: presence_timeout
   
 # Set Wi-Fi power save mode to "LIGHT" as required for Bluetooth on ESP32
 wifi:
