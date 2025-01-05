@@ -94,19 +94,11 @@ binary_sensor:
       }
 
 script:
-
   - id: presence_timeout
     then:
       - lambda: |-
-          // Check if this is installed with Arduino
-          #ifdef USE_ARDUINO
-            #error "Invalid settings for add-on BLE Tracker. Arduino framework is not supported when using Bluetooth in this project."
-          #endif
-          if (!id(is_uploading_tft)) {
-            static const char *const TAG = "nspanel_ha_blueprint";
-            ESP_LOGCONFIG(TAG, "Add-on BLE Tracker");
-          }
-
+        ESP_LOGCONFIG(TAG, "Add-on BLE Tracker");
+  
 # Set Wi-Fi power save mode to "LIGHT" as required for Bluetooth on ESP32
 wifi:
   power_save_mode: LIGHT
