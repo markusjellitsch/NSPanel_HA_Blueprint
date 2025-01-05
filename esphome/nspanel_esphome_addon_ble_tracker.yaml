@@ -94,7 +94,7 @@ binary_sensor:
       }
 
 script:
-  - id: presence_timeout # !extend dump_config
+  - id: !extend dump_config
     then:
       - lambda: |-
           // Check if this is installed with Arduino
