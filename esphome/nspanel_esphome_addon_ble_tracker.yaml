@@ -94,12 +94,15 @@ binary_sensor:
       }
 
 script:
-  - id: presence_timeout
-    then:
-      - lambda: |-
-        ESP_LOGCONFIG(TAG, "Add-on BLE Tracker");
-      - script.execute: presence_timeout
-  
+  # Publish event every 30 seconds when no rssi received
+  id: presence_timeout
+  mode: restart
+  then:
+    - delay: 30s
+    - lambda: |-
+        id(room_presence_debounce).publish_state(0);
+    - script.execute: presence_timeout
+
 # Set Wi-Fi power save mode to "LIGHT" as required for Bluetooth on ESP32
 wifi:
   power_save_mode: LIGHT
