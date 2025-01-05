@@ -38,7 +38,7 @@ esp32_ble_tracker:
               }
             }
             if (best_rssi) {
-               id(apple_watch_rssi).publish_state(*best_rssi);
+            //   id(apple_watch_rssi).publish_state(*best_rssi);
             }
 sensor:
   - platform: template
