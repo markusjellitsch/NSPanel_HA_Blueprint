@@ -96,6 +96,7 @@ binary_sensor:
 script:
   # Publish event every 30 seconds when no rssi received
   - id: presence_timeout
+    mode: restart
     then:
       - delay: 30s
       - lambda: |-
