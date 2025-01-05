@@ -94,6 +94,7 @@ binary_sensor:
       }
 
 script:
+  - id: presence_timeout
   - id: !extend dump_config
     then:
       - lambda: |-
