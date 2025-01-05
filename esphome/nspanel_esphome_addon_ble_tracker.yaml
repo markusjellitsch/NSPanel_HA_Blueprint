@@ -115,7 +115,7 @@ script:
     - delay: 30s
     - lambda: |-
         id(room_presence_debounce).publish_state(0);
-    - script.execute: presence_timeout
+    #-  script.execute: presence_timeout
 
 # Set Wi-Fi power save mode to "LIGHT" as required for Bluetooth on ESP32
 wifi:
