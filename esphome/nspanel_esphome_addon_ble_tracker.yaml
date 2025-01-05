@@ -13,6 +13,8 @@ esphome:
     build_flags:
       - -D NSPANEL_HA_BLUEPRINT_ADDON_BLE_TRACKER
 
+api:
+
 esp32_ble:
   id: ble_component
 
